@@ -5,9 +5,6 @@ import traceback
 from sqlalchemy import create_engine, text
 from pathlib import Path
 
-# ==========================================
-# CONFIGURATION
-# ==========================================
 DB_CONFIG = {
     'user': 'root',
     'password': 'Unique4565',  
@@ -21,7 +18,7 @@ BASE_DIR = Path(__file__).parent
 CLEANED_DIR = BASE_DIR / 'data/data/cleaned' 
 SCHEMA_PATH = BASE_DIR / 'schema.sql'
 
-# MAPPING: CSV Filename -> SQL Table Name
+
 files_to_load = [
     ('cleaned_olist_products_dataset.csv', 'dim_products'),
     ('cleaned_olist_sellers_dataset.csv', 'dim_sellers'),
@@ -34,7 +31,7 @@ files_to_load = [
     ('cleaned_olist_order_reviews_dataset.csv', 'fact_reviews')
 ]
 
-# EXACT DATE COLUMNS
+
 DATE_COLS_MAP = {
     'fact_orders': [
         'order_purchase_timestamp', 'order_approved_at', 
@@ -98,28 +95,28 @@ def load_data(engine):
         try:
             df = pd.read_csv(file_path)
             
-            # 1. Handle Nulls
+            
             df = df.replace({np.nan: None})
             
-            # 2. Date Conversion
+            
             if table_name in DATE_COLS_MAP:
                 for col in DATE_COLS_MAP[table_name]:
                     if col in df.columns:
                         df[col] = pd.to_datetime(df[col], errors='coerce')
 
-            # 3. SPECIAL HANDLING: Filter Flipkart Columns
-            # This ensures we only upload columns that actually exist in the SQL Schema
+            #Filter Flipkart Columns
+        
             if table_name == 'competitor_flipkart':
                 allowed_cols = [
                     'uniq_id', 'crawl_timestamp', 'product_name', 'main_category', 
                     'pid', 'retail_price', 'discounted_price', 'discount_pct', 
                     'brand', 'product_rating', 'overall_rating'
                 ]
-                # Keep only columns that are in both the CSV and the allowed list
+    
                 final_cols = [c for c in allowed_cols if c in df.columns]
                 df = df[final_cols]
 
-            # 4. Load to SQL
+            
             df.to_sql(table_name, con=db_engine, if_exists='append', index=False, chunksize=1000)
             print(f"   -> Success: Loaded {len(df)} rows.")
             
