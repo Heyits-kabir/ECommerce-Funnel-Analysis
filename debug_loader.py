@@ -4,9 +4,6 @@ import traceback
 from sqlalchemy import create_engine, text
 from pathlib import Path
 
-# ==========================================
-# CONFIGURATION
-# ==========================================
 DB_CONFIG = {
     'user': 'root',
     'password': 'Unique4565',  
@@ -44,22 +41,21 @@ def debug_load(engine):
         return
 
     try:
-        # Load CSV
         print("   -> Reading CSV...")
         df = pd.read_csv(file_path)
         print(f"   -> Read {len(df)} rows. Columns: {list(df.columns)}")
         
-        # Verify columns match SQL expectation (Rough check)
+        #Verify columns match SQL expectation 
         print("   -> Pushing to MySQL...")
         
-        # We use a smaller chunksize and explicitly 'append'
+        
         df.to_sql(TABLE_NAME, con=engine, if_exists='append', index=False, chunksize=100)
         
         print("   -> SUCCESS! The table loaded.")
         
     except Exception:
         print("\n!!!!!!!!!!!!!! ERROR DETAILS !!!!!!!!!!!!!!")
-        # THIS IS THE KEY PART - IT WILL PRINT THE REAL REASON
+        
         traceback.print_exc()
         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
 
